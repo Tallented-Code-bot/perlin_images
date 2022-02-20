@@ -1,1 +1,5 @@
 env
+__pycache__
+perlin
+Generative_Art
+*.png
