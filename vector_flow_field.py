@@ -5,6 +5,7 @@ from perlin_numpy import generate_perlin_noise_2d, generate_perlin_noise_3d
 import matplotlib.pyplot as plt
 import matplotlib
 import tqdm
+import math
 
 # from Generative_Art.examples import draw_vectors
 
@@ -21,7 +22,7 @@ shape = (h, w, 2)
 
 
 num_particles = 1000
-iterations = 1000
+iterations = 100
 to_add = 1
 
 
@@ -29,12 +30,13 @@ to_add = 1
 # noise = PerlinNoise(octaves=10, seed=seed)
 
 
-angle_field = generate_perlin_noise_2d((h, w), (10, 10))
-angle_field = angle_field.astype(np.float64)
-field_x = np.cos(angle_field)
-field_y = np.sin(angle_field)
+angle_field = generate_perlin_noise_2d((h, w), (16, 16)).astype(np.float64)
+angle_field = (angle_field + 1) * math.pi
+field_x = np.cos(angle_field) * 0.05
+field_y = np.sin(angle_field) * 0.05
 field = np.stack((field_x, field_y), axis=2)
 print(field_x.shape)
+
 
 x = np.arange(w)
 y = np.arange(h)
@@ -58,8 +60,15 @@ plt.show()
 # plt.show()
 
 
-particles = np.random.rand(num_particles, 2) * min(w, h)
-particleVelocities = np.zeros((num_particles, 2))
+# particles = np.random.rand(num_particles, 2) * min(w, h)
+
+# particles = np.reshape(np.meshgrid(np.arange(w), np.arange(h)), (-1, 2))
+xarr = np.arange(w)
+yarr = np.arange(h)
+particles = np.array(np.meshgrid(xarr, yarr)).T.reshape(-1, 2)
+
+
+particleVelocities = np.zeros(particles.shape)
 print(particles.shape)
 time.sleep(0.1)
 
@@ -97,8 +106,8 @@ for i in tqdm.tqdm(range(iterations), desc="Loading..."):
     brightness_to_add[tParticles[0], tParticles[1]] = to_add
     # print(brightness_to_add)
     brightness += brightness_to_add
-plt.imshow(brightness, vmin=0, vmax=255)
-plt.show()
+# plt.imshow(brightness, vmin=0, vmax=255)
+# plt.show()
 
 
 # brightness = cv2.normalize(
@@ -118,17 +127,25 @@ print()
 
 # hue = np.full(brightness.shape, 266)
 # saturation = np.full(brightness.shape, 100)
-brightness = np.clip(brightness, 0, 255)
+# brightness = np.clip(brightness, 0, 255)
+print("max is ", np.max(brightness))
+brightness = brightness / np.max(brightness)  # Normalize it to a range of 0-1
 
 print(brightness)
 print(brightness.shape)
+
+# r = np.sqrt(brightness) * 180
+
 
 r = np.sqrt(brightness) * 180
 g = np.full(brightness.shape, 20)
 b = np.sqrt(brightness) * 225
 
+
 rgb = np.transpose([r, g, b], (1, 2, 0)).astype(np.float32)
-print(rgb)
+
+
+# print(rgb)
 
 
 # hsv = np.transpose([hue, saturation, brightness], (1, 2, 0)).astype(np.float32)
