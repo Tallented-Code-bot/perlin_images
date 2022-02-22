@@ -6,7 +6,12 @@ import math
 
 
 def create_image(
-    filename: str, w: int, h: int, base_color, seed: int = None, iterations: int = 100
+    filename: str,
+    w: int,
+    h: int,
+    base_color: tuple[int, int, int],
+    seed: int = None,
+    iterations: int = 100,
 ):
     """Create an image based on perlin noise flow fields."""
     # Set numpy seed if it is specified.
@@ -23,11 +28,11 @@ def create_image(
     # Turn the angles into a field of vectors
     field_x = np.cos(angle_field)
     field_y = np.sin(angle_field)
-    field = np.stack((field_x, field_y), axis=2)
+    field = np.stack((field_y, field_x), axis=2)
 
     # Create an array of particles, one for every pixel in the image.
-    xarr = np.arange(w)
-    yarr = np.arange(h)
+    xarr = np.arange(h)
+    yarr = np.arange(w)
     particles = np.array(np.meshgrid(xarr, yarr)).T.reshape(-1, 2)
 
     # Initialize the particle velocities.
@@ -45,7 +50,13 @@ def create_image(
         )
 
         # Update the particle positions.
-        particles = np.clip(particles + particleVelocities, 0, h - 1)
+        newTransposedParticles = np.transpose(particles + particleVelocities)
+        particles = np.array(
+            [
+                np.clip(newTransposedParticles[0], 0, h - 1),
+                np.clip(newTransposedParticles[1], 0, w - 1),
+            ]
+        ).transpose()
 
         # Add 1 to each position where there is a particle.
         brightness_to_add = np.zeros((h, w))
@@ -56,10 +67,11 @@ def create_image(
     brightness = brightness / np.max(brightness)
 
     # Apply a coloring function to create red, green, and blue values.
-    r = np.sqrt(brightness) * 180
-    g = np.full(brightness.shape, base_color)
-    b = np.sqrt(brightness) * 225
+    r = np.sqrt(brightness) * base_color[0]
+    g = np.full(brightness.shape, base_color[1])
+    b = np.sqrt(brightness) * base_color[2]
 
     # Write the rgb file to disk.
-    rgb = np.transpose([r, g, b], (1, 2, 0)).astype(np.float32)
+    rgb = np.transpose([r, g, b], (1, 2, 0)).astype(np.int32)
+
     cv2.imwrite(filename, rgb)
