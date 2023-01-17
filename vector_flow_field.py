@@ -40,6 +40,9 @@ def create_image(
 
     brightness = np.zeros((h, w))
 
+    brightnessMap = np.zeros((h, w))
+    # brightnessMap[940:980, 520:580] = 1
+
     # Iterate for the number of iterations (tqdm is a progress bar).
     for i in tqdm.tqdm(range(iterations), desc="Loading..."):
         # Transpose the particles array, then use it as an index
@@ -62,13 +65,15 @@ def create_image(
         brightness_to_add = np.zeros((h, w))
         brightness_to_add[transposedParticles[0], transposedParticles[1]] = 1
         brightness += brightness_to_add
+        brightness += brightnessMap
 
     # Normalize the brightness array to a range of 0-1
     brightness = brightness / np.max(brightness)
 
     # Apply a coloring function to create red, green, and blue values.
     r = np.sqrt(brightness) * base_color[0]
-    g = np.full(brightness.shape, base_color[1])
+    g = np.sqrt(brightness) * base_color[1]
+    # g = np.full(brightness.shape, base_color[1])
     b = np.sqrt(brightness) * base_color[2]
 
     # Write the rgb file to disk.
@@ -144,10 +149,12 @@ def create_images(
         # Apply a coloring function to create red, green, and blue values.
         r = np.sqrt(new_brightness) * base_color[0]
         g = np.full(new_brightness.shape, base_color[1])
+        # g = np.sqrt(new_brightness) * base_color[1]
         b = np.sqrt(new_brightness) * base_color[2]
 
         # Write the rgb file to disk.
         # rgb = np.transpose([r, g, b], (1, 2, 0)).astype(np.int32)
         rgb = np.dstack((r, g, b))
+        np.savetxt("array.txt", rgb)
 
         cv2.imwrite(filename, rgb)
